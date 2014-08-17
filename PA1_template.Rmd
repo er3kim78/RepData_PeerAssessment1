@@ -104,10 +104,10 @@ act2$date3<-ifelse(act2$date2 %in% c("Monday", "Tuesday", "Wednesday", "Thursdsa
 
 ```{r}
 #Aggregate by interval by weekend/weekday
-library(ggplot2)
 require(ggplot2)
 act2<-data.table(act2)
 setkey(act2, interval, date3)
 intrvl2<-data.frame(act2[,mean(steps), by=list(interval, date3)])
 ggplot(data=intrvl2, aes(x=interval, y=V1))+geom_line()+facet_grid(.~date3)
 ```
+
