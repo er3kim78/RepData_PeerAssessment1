@@ -2,19 +2,112 @@
 
 
 ## Loading and preprocessing the data
+```{r, echo=TRUE}
+# install.packages("data.table")
+require(data.table)
+setwd("C:/Users/Eric.Kim/Desktop/TSA Files/Coursera/Reproducible Research")
+ 
+#Read file and subset
+act<-read.csv("./activity.csv")
+act$date<-as.Date(as.character(act$date, format="%Y%m%d"))
+nacount<-sum(is.na(act$steps))
+act<-subset(act, act$steps!= "NA")
 
+#Aggregate by day
+act<-data.table(act)
+setkey(act, date)
+steps<-data.frame(act[,sum(steps), by=date])
+names(steps)[2]<-"stepnum"
 
-
+```
 ## What is mean total number of steps taken per day?
+```{r simpleplot}
+#Histogram
+hist(steps$stepnum, main = "Steps per Day Histogram", xlab="Steps per Day")
+```
+
+```{r}
+#install required packages
+require(MASS)
+require(UsingR)
+```
+
+```{r}
+#mean steps per day
+m<-mean(steps$stepnum)
+m
+md<-median(steps$stepnum)
+md
+```
 
 
+The mean is `r m`.  
+The median is `r md`.  
 
 ## What is the average daily activity pattern?
+```{r}
+#Aggregate by interval
+library(ggplot2)
+require(ggplot2)
+act<-data.table(act)
+setkey(act, interval)
+intrvl<-data.frame(act[,mean(steps), by=interval])
+ggplot(data=intrvl, aes(x=interval, y=V1))+geom_line()
+```
 
+```{r}
+max(intrvl$V1)
+maxInterval<-subset(intrvl$interval, intrvl$V1==max(intrvl$V1))
+```
 
+The max interval is `r maxInterval`
+
+There are `r nacount` NA's
 
 ## Imputing missing values
+```{r}
+setwd("C:/Users/Eric.Kim/Desktop/TSA Files/Coursera/Reproducible Research")
 
+#Read file and subset
+act2<-read.csv("./activity.csv")
+act2$date<-as.Date(as.character(act2$date, format="%Y%m%d"))
+act2[is.na(act2)]<- mean(na.omit(act2$steps))
 
+#Aggregate by day
+act2<-data.table(act2)
+setkey(act2, date)
+steps2<-data.frame(act2[,sum(steps), by=date])
+```
+
+```{r simpleplot2}
+#Histogram
+hist(steps2$V1, main = "Steps per Day Histogram with replacing NA", xlab="Steps per Day")
+```
+
+```{r}
+#calculate mean and median
+m2<-mean(steps2$V1)
+m2
+md2<-median(steps2$V1)
+md2
+```
+
+After replacing NA with the mean steps, 
+The new mean is `r m2`
+The new median is `r md2`
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r}
+act2$date2<-weekdays(act2$date)
+act2$date3<-ifelse(act2$date2 %in% c("Monday", "Tuesday", "Wednesday", "Thursdsay", "Friday"), "Weekday", "Weekend")
+```
+
+```{r}
+#Aggregate by interval by weekend/weekday
+library(ggplot2)
+require(ggplot2)
+act2<-data.table(act2)
+setkey(act2, interval, date3)
+intrvl2<-data.frame(act2[,mean(steps), by=list(interval, date3)])
+ggplot(data=intrvl2, aes(x=interval, y=V1))+geom_line()+facet_grid(.~date3)
+```
